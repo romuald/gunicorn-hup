@@ -106,7 +106,10 @@ class GunicornHUP(GenericEventHandler):
             mre = re.compile(r'^gunicorn:\s+master\s+\[(.*)\]')
             pids = [ pid for pid in os.listdir('/proc') if pid.isdigit() ]
             for pid in pids:
-                data = open(os.path.join('/proc', pid, 'cmdline'), 'rb').read()
+                try:
+                    data = open(os.path.join('/proc', pid, 'cmdline')).read()
+                except:
+                    continue
                 found = mre.search(data)
                 if not found:
                     continue
