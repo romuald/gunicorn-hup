@@ -7,6 +7,7 @@ import os.path
 import sys
 import re
 import signal
+import logging
 
 from threading import Timer
 from optparse import OptionParser
@@ -19,7 +20,6 @@ except ImportError:
     or maybe pip install pyinotify
     """
     raise
-import logging
 
 class GenericEventHandler(pyi.ProcessEvent):
     """Handles events on specific dirs, then call call the callback method
@@ -101,6 +101,7 @@ class GunicornHUP(GenericEventHandler):
                 if e.errno != 3:
                     raise
                 self.known_pid = None
+
         if self.known_pid is None:
             #gunicorn: master [website]
             mre = re.compile(r'^gunicorn:\s+master\s+\[(.*)\]')
@@ -112,6 +113,7 @@ class GunicornHUP(GenericEventHandler):
                     data = open(path).read()
                 except:
                     continue
+
                 found = mre.search(data)
                 if not found:
                     continue
@@ -119,13 +121,15 @@ class GunicornHUP(GenericEventHandler):
                 appname = found.group(1)
                 if self.appname is None or appname == self.appname:
                     self.known_pid = pid
-                    logger.info("found master process %d (%s)" % (self.known_pid, appname))
+                    logger.info("found master process %d (%s)" % (
+                        self.known_pid, appname) )
                     break
             else:
                 msg = "Could not find gunicorn master process"
                 if self.appname:
                     msg += " for %s" % self.appname
                 logger.error(msg)
+
                 return
 
         def kill(pid):
@@ -143,8 +147,8 @@ if __name__ == '__main__':
 
     parser = OptionParser(usage)
     parser.add_option("-a", dest="appmodule", help="application module")
-    parser.add_option("-w", dest="wait", type="int", default=500,
-        help="wait interval before sending HUP [default: %default]")
+    parser.add_option("-w", dest="wait", type="int", default=500, help="wait"
+        " interval milliseconds before sending HUP [default: %default]")
     parser.add_option("-v", dest="verbose", action="store_true", default=False,
         help="be more verbose")
     parser.add_option("-q", dest="quiet", action="store_true", default=False,
