@@ -104,10 +104,12 @@ class GunicornHUP(GenericEventHandler):
         if self.known_pid is None:
             #gunicorn: master [website]
             mre = re.compile(r'^gunicorn:\s+master\s+\[(.*)\]')
-            pids = [ pid for pid in os.listdir('/proc') if pid.isdigit() ]
+            pids = [ int(pid) for pid in os.listdir('/proc') if pid.isdigit() ]
             for pid in pids:
+                path = os.path.join('/proc', str(pid), 'cmdline')
                 try:
-                    data = open(os.path.join('/proc', pid, 'cmdline')).read()
+                    # process might be gone between ls and open
+                    data = open(path).read()
                 except:
                     continue
                 found = mre.search(data)
@@ -116,7 +118,7 @@ class GunicornHUP(GenericEventHandler):
 
                 appname = found.group(1)
                 if self.appname is None or appname == self.appname:
-                    self.known_pid = int(pid)
+                    self.known_pid = pid
                     logger.info("found master process %d (%s)" % (self.known_pid, appname))
                     break
             else:
