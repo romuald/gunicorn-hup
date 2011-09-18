@@ -32,12 +32,12 @@ If you want to watch specific directories, you can use the following::
 ------
 
 
-You can also target a specific gunicorn process using `-a`, in case
+You can also target a specific gunicorn process using ``-a``, in case
 you have multiple gunicorn instances running::
 
   ./gunicorn_hup_on_change.py -a my_app
 
-Will search for a process "named" `gunicorn: master [my_app]`
+Will search for a process "named" ``gunicorn: master [my_app]``
 
 
 ------
@@ -45,6 +45,6 @@ Will search for a process "named" `gunicorn: master [my_app]`
 By default, the watcher will wait 500ms after a file's modification to send the
 HUP signal, to avoid sending multiple signals when you update a batch of files
 (when updating your repository for example).
-You can change this interval with the `-w` option
+You can change this interval with the ``-w`` option
 
 .. vim: et ts=2 sw=2
