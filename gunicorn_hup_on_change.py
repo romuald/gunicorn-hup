@@ -89,6 +89,7 @@ class GenericEventHandler(pyi.ProcessEvent):
 
 class GunicornHUP(GenericEventHandler):
     appname = None
+    pidfile = None
     known_pid = None
     wait_time = 500
     timer = None
@@ -103,6 +104,12 @@ class GunicornHUP(GenericEventHandler):
                 self.known_pid = None
 
         if self.known_pid is None:
+            if self.pidfile:
+                self.known_pid = int(open(self.pidfile).read())
+                logger.info("found master process %d (%s)" % (
+                    self.known_pid, self.pidfile) )
+                return
+
             #gunicorn: master [website]
             mre = re.compile(r'^gunicorn:\s+master\s+\[(.*)\]')
             pids = [ int(pid) for pid in os.listdir('/proc') if pid.isdigit() ]
@@ -143,10 +150,11 @@ class GunicornHUP(GenericEventHandler):
         self.timer.start()
 
 if __name__ == '__main__':
-    usage = "usage: %prog [-q|-v] [-w wait] [-a app_module] [watch_dirs]"
+    usage = "usage: %prog [-q|-v] [-w wait] [-p pidfile] [-a app_module] [watch_dirs]"
 
     parser = OptionParser(usage)
     parser.add_option("-a", dest="appmodule", help="application module")
+    parser.add_option("-p", dest="pidfile", help="pidfile containing master pid")
     parser.add_option("-w", dest="wait", type="int", default=500, help="wait"
         " interval milliseconds before sending HUP [default: %default]")
     parser.add_option("-v", dest="verbose", action="store_true", default=False,
@@ -179,6 +187,7 @@ if __name__ == '__main__':
 
     handler = GunicornHUP(watchdirs)
     handler.appname = options.appmodule
+    handler.pidfile = options.pidfile
     handler.wait_time = max(20, options.wait)
 
     parser.destroy()

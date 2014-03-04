@@ -39,6 +39,16 @@ you have multiple gunicorn instances running::
 
 Will search for a process "named" ``gunicorn: master [my_app]``
 
+------
+
+
+You can also pass a pidfile that is storing the master gunicorn pid using ``-p``, if
+that option is specified when gunicorn is started::
+
+  ./gunicorn_hup_on_change.py -p /tmp/my_app.pid
+
+Will simply open and read that file for the pid.
+
 
 ------
 
